@@ -32,16 +32,47 @@ NEIndividual >> addConnection: aConnection [
 NEIndividual >> addHiddenNode [
 	| node |
 	node := NENode new setAsHidden.
+	node activation: Sigmoid.
+	node computed: false.
+	self addNode: node.
+	^ node
+]
+
+{ #category : #adding }
+NEIndividual >> addHiddenNode: aPosition [
+	| node |
+	node := NENode new setAsHidden.
+	node activation: Sigmoid.
+	node position: aPosition.
+	node computed: false.
 	self addNode: node.
 	^ node
 ]
 
 { #category : #adding }
 NEIndividual >> addInputNode [
-	| newWeight |
-	self addNode: (NENode new setAsInput; innovationNumber: 1).
+	self
+		addNode:
+			(NENode new
+				setAsInput;
+				innovationNumber: 1; computed: false)
 
-"	self outputNodes do: [ :on |
+	"	self outputNodes do: [ :on |
+		newWeight := random next * 4 - 2.
+		self addConnection: (NEConnection new in: self numberOfNodesWithBias; out: on id; weight: newWeight; makeEnabled; innovationNumber: 1)
+	]"
+]
+
+{ #category : #adding }
+NEIndividual >> addInputNode: aPosition [
+	self
+		addNode:
+			(NENode new
+				setAsInput;
+				innovationNumber: 1;
+				computed: false; position: aPosition)
+
+	"	self outputNodes do: [ :on |
 		newWeight := random next * 4 - 2.
 		self addConnection: (NEConnection new in: self numberOfNodesWithBias; out: on id; weight: newWeight; makeEnabled; innovationNumber: 1)
 	]"
@@ -51,15 +82,36 @@ NEIndividual >> addInputNode [
 NEIndividual >> addNode: aNode [
 	self resetNetwork.
 	self addRawNode: aNode.
-	aNode id: nodes size
+	aNode id: nodes size.
 ]
 
 { #category : #adding }
 NEIndividual >> addOutputNode [
-	| newWeight |
-	self addNode: (NENode new setAsOutput; innovationNumber: 1).
-	
-"	self inputNodes do: [ :ino |
+	self
+		addNode:
+			(NENode new
+				setAsOutput;
+				innovationNumber: 1;
+				computed: false; activation: Sigmoid)
+
+	"	self inputNodes do: [ :ino |
+		newWeight := random next * 4 - 2.
+		self addConnection: (NEConnection new in: ino id; out: self numberOfNodesWithBias; weight: newWeight; makeEnabled; innovationNumber: 1)
+	]"
+]
+
+{ #category : #adding }
+NEIndividual >> addOutputNode: aPosition [
+	self
+		addNode:
+			(NENode new
+				setAsOutput;
+				innovationNumber: 1;
+				activation: Sigmoid;
+				computed: false;
+				position: aPosition)
+
+	"	self inputNodes do: [ :ino |
 		newWeight := random next * 4 - 2.
 		self addConnection: (NEConnection new in: ino id; out: self numberOfNodesWithBias; weight: newWeight; makeEnabled; innovationNumber: 1)
 	]"
@@ -121,12 +173,15 @@ NEIndividual >> copy [
 
 { #category : #'public access' }
 NEIndividual >> evaluate: anArray [
-	self assert: [ anArray size = self numberOfInputs ] description: 'Wrong number of arguments'.
-	
+	self
+		assert: [ anArray size = self numberOfInputs ]
+		description: 'Wrong number of arguments'.
 	self buildNetwork.
-	
+
 	"We provide 1 to the first node, which is considered as the bias node"
-	self inputNodes with: #(1), anArray do: [ :n :aValue | n evaluate: aValue ].
+	self inputNodes
+		with: #(1) , anArray
+		do: [ :n :aValue | n evaluate: aValue ].
 	^ self outputNodes collect: [ :n | n result ] as: Array
 ]
 

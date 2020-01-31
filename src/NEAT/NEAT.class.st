@@ -38,6 +38,11 @@ NEAT >> computeFitnesses [
 	population do: [ :i | i computeFitness: fitness ]
 ]
 
+{ #category : #initialization }
+NEAT >> config [
+	^ config
+]
+
 { #category : #'as yet unclassified' }
 NEAT >> crossoverBetween: ind1 and: ind2 [
 	^ ind1 fitness > ind2 fitness
@@ -61,6 +66,7 @@ NEAT >> currentGeneration [
 { #category : #initialization }
 NEAT >> defaultConfig [
 	self resetConfig.
+	self for: NEActivationFunctionMutationOperation prob: 0.
 	self for: NEConnectionWeightMutationOperation prob: 0.2.
 	self for: NEAddConnectionMutationOperation prob: 0.2.
 	self for: NEAddNodeMutationOperation prob: 0.01.
@@ -233,6 +239,11 @@ NEAT >> numberOfOutputs: anObject [
 ]
 
 { #category : #accessing }
+NEAT >> population [
+	^ population
+]
+
+{ #category : #accessing }
 NEAT >> populationSize [
 	^ populationSize
 ]
@@ -297,13 +308,17 @@ NEAT >> runOneGeneration [
 		timesRepeat: [ 
 			"The following lines use the crossover"
 			random next <= self crossoverRate
+				"using crossover"
 				ifTrue: [
+					"select firts individual"
 					ind1 := self selectIndividual.
+					"Select individuals for the same species as ind1"
 					ind2 := self selectIndividual: ind1 species individuals.
 					newInd := self crossoverBetween: ind1 and: ind2.
 					newInd addParent: ind1; addParent: ind2.
 					ind1 addChildren: newInd.
 					ind2 addChildren: newInd ]
+				"Without crossover"
 				ifFalse: [
 					| i |
 					i := self selectIndividual.

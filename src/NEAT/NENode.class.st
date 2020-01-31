@@ -9,10 +9,38 @@ Class {
 		'numberOfInputs',
 		'zValue',
 		'numberOfReceivedValues',
-		'result'
+		'result',
+		'activationFunction',
+		'substratePosition',
+		'computed'
 	],
 	#category : #'NEAT-Core'
 }
+
+{ #category : #accessing }
+NENode >> activation [
+	^ activationFunction 
+]
+
+{ #category : #accessing }
+NENode >> activation: aFunction [
+	activationFunction := aFunction
+]
+
+{ #category : #'as yet unclassified' }
+NENode >> cache [
+	^ connectionsCache 
+]
+
+{ #category : #'as yet unclassified' }
+NENode >> computed [
+	^computed
+]
+
+{ #category : #'as yet unclassified' }
+NENode >> computed: aValue [
+ computed := aValue
+]
 
 { #category : #'as yet unclassified' }
 NENode >> connect: anotherNode weight: aWeight [
@@ -31,35 +59,41 @@ NENode >> copy [
 	newNode id: self id.
 	newNode kind: self kind.
 	newNode innovationNumber: self innovationNumber.
+	newNode activation: self activation.
 	^ newNode
 
 ]
 
 { #category : #'public access' }
 NENode >> evaluate: aValue [
-"	self isInput ifFalse: [
+	"	self isInput ifFalse: [
 		self assert: [ aValue >= 0 ].
 		self assert: [ aValue <= 1 ] ]."
 
 	"We just received a value. We add it to zValue."
+	self computed ifTrue: [  result := self isInput
+		ifTrue: [ ^zValue ]
+		ifFalse: [ ^self activation apply: zValue ].].
+	
 	zValue := zValue + aValue.
 
 	"We say we received a new value"
 	numberOfReceivedValues := numberOfReceivedValues + 1.
 
-"	self haltIf: [ numberOfReceivedValues > numberOfInputs ]."
+	"	self haltIf: [ numberOfReceivedValues > numberOfInputs ]."
 
 
-	"If we received the number of zValues, then we can compute the sigmoid, and keep it."
-	numberOfReceivedValues = numberOfInputs ifFalse: [ ^ self ].
-	result := self isInput ifTrue: [ zValue ] ifFalse: [ self sigmoid: zValue ].
-	
+	"If we received the number of zValues, then we can compute the value of the activation, and keep it."
+	(numberOfReceivedValues = numberOfInputs)
+		ifFalse: [ ^ self ];
+		ifTrue: [ self computed: true ].
+	result := self isInput
+		ifTrue: [ zValue ]
+		ifFalse: [ self activation apply: zValue ].
+
 	"We go here only if not output"
-	connectionsCache do: [ :assoc | assoc value evaluate: result * assoc key ]
-
-
-
-	
+	connectionsCache
+		do: [ :assoc | assoc value evaluate: result * assoc key ]
 ]
 
 { #category : #accessing }
@@ -118,6 +152,16 @@ NENode >> numberOfInputs [
 	^ numberOfInputs
 ]
 
+{ #category : #accessing }
+NENode >> position [
+	^ substratePosition
+]
+
+{ #category : #accessing }
+NENode >> position: aPosition [
+	substratePosition := aPosition
+]
+
 { #category : #printing }
 NENode >> printOn: str [ 
 	super printOn: str.
@@ -134,12 +178,12 @@ NENode >> printOn: str [
 NENode >> resetConnections [
 	connectionsCache := OrderedCollection new.
 	zValue := 0.
+	computed := false.
 	numberOfInputs := 0.
 	numberOfReceivedValues := 0.
 	result := 0.
-	self isInput 
+	self isInput
 		ifTrue: [ numberOfInputs := 1 ]
-		
 ]
 
 { #category : #'public access' }
@@ -149,7 +193,8 @@ NENode >> result [
 
 { #category : #initialization }
 NENode >> setAsHidden [
-	kind := #hidden
+	kind := #hidden.
+	self activation: Sigmoid
 ]
 
 { #category : #initialization }
@@ -159,7 +204,8 @@ NENode >> setAsInput [
 
 { #category : #initialization }
 NENode >> setAsOutput [
-	kind := #output
+	kind := #output.
+	self activation: Sigmoid
 ]
 
 { #category : #'public access' }

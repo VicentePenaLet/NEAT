@@ -12,7 +12,8 @@ Class {
 		'result',
 		'activationFunction',
 		'substratePosition',
-		'computed'
+		'computed',
+		'level'
 	],
 	#category : #'NEAT-Core'
 }
@@ -127,6 +128,11 @@ NENode >> isBias [
 ]
 
 { #category : #testing }
+NENode >> isHidden [
+	^ kind == #hidden
+]
+
+{ #category : #testing }
 NENode >> isInput [
 	^ kind == #input
 ]
@@ -144,6 +150,16 @@ NENode >> kind [
 { #category : #accessing }
 NENode >> kind: aKind [
 	kind := aKind
+]
+
+{ #category : #accessing }
+NENode >> level [
+	^ level
+]
+
+{ #category : #accessing }
+NENode >> level: n [
+	level := n
 ]
 
 { #category : #accessing }
@@ -191,21 +207,41 @@ NENode >> result [
 	^ result
 ]
 
+{ #category : #'public access' }
+NENode >> result: n [
+	result:= n
+]
+
 { #category : #initialization }
 NENode >> setAsHidden [
 	kind := #hidden.
 	self activation: Sigmoid
 ]
 
-{ #category : #initialization }
+{ #category : #accessing }
+NENode >> setAsHidden: n [
+	kind := #hidden.
+	self activation: Sigmoid.
+	self level: n
+]
+
+{ #category : #accessing }
 NENode >> setAsInput [
-	kind := #input
+	kind := #input.
+	self level: 0
 ]
 
 { #category : #initialization }
 NENode >> setAsOutput [
 	kind := #output.
 	self activation: Sigmoid
+]
+
+{ #category : #accessing }
+NENode >> setAsOutput: n [
+	kind := #output.
+	self activation: Sigmoid.
+	self level: n
 ]
 
 { #category : #'public access' }
@@ -216,4 +252,9 @@ NENode >> sigmoid: z [
 { #category : #evaluating }
 NENode >> value [
 	^ zValue
+]
+
+{ #category : #accessing }
+NENode >> zValue [
+	^zValue
 ]

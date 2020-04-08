@@ -66,10 +66,10 @@ NEAT >> currentGeneration [
 { #category : #initialization }
 NEAT >> defaultConfig [
 	self resetConfig.
-	self for: NEActivationFunctionMutationOperation prob: 0.
+	self for: NEActivationFunctionMutationOperation prob: 0.2.
 	self for: NEConnectionWeightMutationOperation prob: 0.2.
 	self for: NEAddConnectionMutationOperation prob: 0.2.
-	self for: NEAddNodeMutationOperation prob: 0.01.
+	self for: NEAddNodeMutationOperation prob: 0.2.
 	self for: NECrossoverOperation prob: 0.2
 ]
 

@@ -8,7 +8,10 @@ Class {
 		'connections',
 		'random',
 		'fitness',
-		'species'
+		'species',
+		't',
+		'results',
+		'expected'
 	],
 	#category : #'NEAT-Core'
 }
@@ -185,6 +188,11 @@ NEIndividual >> evaluate: anArray [
 	^ self outputNodes collect: [ :n | n result ] as: Array
 ]
 
+{ #category : #'as yet unclassified' }
+NEIndividual >> expected: n [
+ expected:= n
+]
+
 { #category : #accessing }
 NEIndividual >> fitness [
 	self assert: [ fitness notNil ] description: 'Need to compute fitness first'.
@@ -338,6 +346,11 @@ NEIndividual >> resetNetwork [
 	nodes do: #resetConnections
 ]
 
+{ #category : #'as yet unclassified' }
+NEIndividual >> results: n [
+ results:= n
+]
+
 { #category : #'instance creation' }
 NEIndividual >> seed: aSeed [
 	self random: (Random seed: aSeed)
@@ -351,6 +364,11 @@ NEIndividual >> species [
 { #category : #accessing }
 NEIndividual >> species: anObject [
 	species := anObject
+]
+
+{ #category : #'as yet unclassified' }
+NEIndividual >> t: n [
+ t:= n
 ]
 
 { #category : #tracing }

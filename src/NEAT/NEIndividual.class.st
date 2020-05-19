@@ -24,9 +24,7 @@ NEIndividual >> addChildren: anIndividual [
 { #category : #adding }
 NEIndividual >> addConnection: aConnection [
 	self assert: [ connections noneSatisfy: [ :c | c in = aConnection in and: [ c out =  aConnection out ] ] ] description: 'Cannot have duplicated connections'.
-	connections ifNotEmpty: [ 
-		self assert: [ aConnection innovationNumber >= connections last innovationNumber ] description: 'Something wrong here'. 
-	].
+
 	connections add: aConnection.
 	self resetNetwork.
 ]
@@ -177,7 +175,7 @@ NEIndividual >> copy [
 { #category : #'public access' }
 NEIndividual >> evaluate: anArray [
 	self
-		assert: [ anArray size = self numberOfInputs ]
+		assert: [ anArray size = (self numberOfInputs)]
 		description: 'Wrong number of arguments'.
 	self buildNetwork.
 
@@ -234,7 +232,7 @@ NEIndividual >> initialize [
 	"self seed: 42."
 	
 	"This is the bias node"
-	self addInputNode.
+	
 	
 	parents := OrderedCollection new: 2.
 	children := OrderedCollection new

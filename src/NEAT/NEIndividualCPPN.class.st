@@ -12,6 +12,11 @@ Class {
 }
 
 { #category : #testing }
+NEIndividualCPPN class >> inputs [
+	^inputs
+]
+
+{ #category : #testing }
 NEIndividualCPPN class >> inputs: anArray [
 	inputs:= anArray
 ]
@@ -129,11 +134,32 @@ NEIndividualCPPN >> build [
 ]
 
 { #category : #adding }
+NEIndividualCPPN >> buildANNFromCPP [
+		"We build the network from ind, the CPP"
+		| net|
+	    net := NEIndividual new.
+		"This depends on the problem to solve, the XOR"
+		
+		NEIndividualCPPN inputs do: [ :position| net addInputNode: position ]. 
+		NEIndividualCPPN outputs do: [ :position| net addOutputNode:position ].
+
+		
+		net inputNodes do: [ :node1| net outputNodes do:[:node2| |array| array := (Array with: (node1 position first) with:(node1 position last) with:(node2 position first) with: (node2 position last)).
+																							net addConnection: (NEConnection new 
+																											makeEnabled; 
+																											in: (node1 id);
+																											out: (node2 id);
+																											weight: ((super evaluate: array) first))]].
+		
+		self network: net
+]
+
+{ #category : #adding }
 NEIndividualCPPN >> evaluate: anArray [
 	|result|
 	self network = nil
-		ifFalse: [ ^ self network evaluate: anArray ].
-	self build.
+		ifFalse: [ ^ self evaluateAux: anArray ].
+   self buildANNFromCPP.
 	network buildNetwork.
 	result:=network evaluate: anArray.
 	"network:= nil."
@@ -141,14 +167,26 @@ NEIndividualCPPN >> evaluate: anArray [
 ]
 
 { #category : #adding }
+NEIndividualCPPN >> evaluateAux: anArray [
+	self
+		assert: [ anArray size = (self network numberOfInputs +1)]
+		description: 'Wrong number of arguments'.
+	self network buildNetwork.
+
+	"We provide 1 to the first node, which is considered as the bias node"
+	self network inputNodes
+		with: anArray
+		do: [ :n :aValue | n evaluate: aValue ].
+	^ self network outputNodes collect: [ :n | n result ] as: Array
+]
+
+{ #category : #adding }
 NEIndividualCPPN >> evaluatePosition: position1 and: position2 [
 ^ super evaluate: (Array
 								with: (position1 at: 1)
 								with: (position1 at: 2)
-								with: (position1 at: 3)
 								with: (position2 at: 1)
-								with: (position2 at: 2)
-								with: (position2 at: 3)).
+								with: (position2 at: 2)).
 ]
 
 { #category : #adding }

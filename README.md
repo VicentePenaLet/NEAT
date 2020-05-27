@@ -19,36 +19,51 @@ Gofer new
 
 # Example
 
-The following script configures the algorithm to learn the binary to decimal convertion of 2 bit numbers.
+## Visual Discrimination
 
 ```Smalltalk
-dataset := #( #(0 0 0 0) #(0 0 1 1) #(0 1 0 2) #(0 1 1 3) #(1 0 0 4) #(1 0 1 5) #(1 1 0 6) #(1 1 1 7)).
+substrate:= OrderedCollection new.
+(-1 to: 1 count: 11) do:[:x| (-1 to: 1 count: 11) do: [ :y| substrate add: (Array with: x with: y)]].
+
+
+NEIndividualCPPN inputs: substrate. 
+NEIndividualCPPN outputs: substrate.
+
 
 neat := NEAT new.
-neat numberOfInputs: 6.
-neat numberOfOutputs: 2.
+neat populationSize: 100. 
+neat resetConfig.
 neat individualClass: NEIndividualCPPN.
-NEIndividualCPPN inputs: #(#(1 1 -1) #(1 -1 -1) #(-1 1 -1) #(-1 -1 -1)).
-NEIndividualCPPN outputs: #(#(-1 -1 1) #(-1 0 1) #(-1 1 1) #(0 -1 1) #(0 1 1) #(1 -1 1) #(1 0 1) #(1 1 1)).
-neat populationSize: 50.
-neat fitness: [ :ind |
-        sumError := 0.
-		  actual:= OrderedCollection new.
-		  expected:= OrderedCollection new.
-        dataset do: [ :row |
-                outputs := ind evaluate: row allButLast.
-                expectedOutput := (1 to: NEIndividualCPPN outputs size) collect: [ :notUsed | 0 ].
-                expectedOutput at: (row last + 1) put: 1.
-                t := (1 to: NEIndividualCPPN outputs size) collect: [ :i | ((expectedOutput at: i) - (outputs at: i)) squared ].
-                sumError := sumError + t sum.
-					actual add: outputs.
-					expected add: expectedOutput.
-        ].
-			ind expected: expected.
-			ind results: actual.
-        sumError negated.].
+neat for: NEConnectionWeightMutationOperation prob: 0.2.
+neat for: NEAddConnectionMutationOperation prob: 0.2.
+neat for: NEAddNodeMutationOperation prob: 0.03.
+neat for: NECrossoverOperation prob: 0.2.
+neat for: NEActivationFunctionMutationOperation prob: 0.2.
+neat numberOfInputs: 5.
+neat numberOfOutputs: 1.
 
-neat numberOfGenerations: 10.
+
+
+getPosition:= [ :individual| |out m position|
+	out:= individual network nodes select:[:node| node isOutput].
+	m := 0.
+	out do: [:node| (m < node result) ifTrue:[m:= node result. position:= node position]].
+	position].
+
+
+neat fitness: [ :cpp | 
+		| score network y1 y2 result error|
+		score := 0.
+		dataset:= ExampleGenerator run.
+		cpp buildANNFromCPP.
+		dataset do: [ :example |  example evaluate: cpp.
+										 result:= getPosition value: cpp.
+										 example predicted: result.
+										 error:= (result  - (example largePosition)) squared sum.
+										 score:= score + error].
+									score negated asFloat].
+
+neat numberOfGenerations: 100.
 neat run.
 ```
 

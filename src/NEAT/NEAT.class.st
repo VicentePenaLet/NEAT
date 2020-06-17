@@ -15,7 +15,8 @@ Class {
 		'numberOfGenerations',
 		'shouldUseElitism',
 		'speciationThreshold',
-		'individualClass'
+		'individualClass',
+		'elitismN'
 	],
 	#category : #'NEAT-Core'
 }
@@ -70,7 +71,8 @@ NEAT >> defaultConfig [
 	self for: NEConnectionWeightMutationOperation prob: 0.2.
 	self for: NEAddConnectionMutationOperation prob: 0.2.
 	self for: NEAddNodeMutationOperation prob: 0.2.
-	self for: NECrossoverOperation prob: 0.2
+	self for: NECrossoverOperation prob: 0.2.
+
 ]
 
 { #category : #initialization }
@@ -83,6 +85,7 @@ NEAT >> doLog [
 	log maxFitness: (population collect: #fitness) max.
 	log averageFitness: ((population collect: #fitness) average asFloat round: 3).
 	log bestIndividual: self result.
+	log bestN: (self getBestN: elitismN).
 	logs add: log.
 ]
 
@@ -133,6 +136,17 @@ NEAT >> for: aClass prob: prob [
 	config do: [ :assoc | (assoc key isKindOf: aClass) ifTrue: [ assoc value: prob. ^ self ] ].
 	
 	config add: aClass new -> prob
+]
+
+{ #category : #accessing }
+NEAT >> getBestN: n [
+	| winners popCopy|
+	popCopy := population copy.
+	winners := (1 to: n)collect: [ :unused| |winner winnerIndex|winner := popCopy first.
+														winnerIndex := 1. 
+														popCopy withIndexDo:  [ :i :index | winner fitness < i fitness ifTrue: [ winner := i. winnerIndex := index]].
+	popCopy removeAt: winnerIndex.].
+	^ winners
 ]
 
 { #category : #ui }
@@ -193,13 +207,13 @@ NEAT >> initialize [
 	
 	populationSize := 150.
 	random := Random seed: 42.
-	
+	elitismN := 20.
 	logs := OrderedCollection new.
 	numberOfGenerations := 10.
 	
 	self individualClass: NEIndividual.
 	
-	self speciationThreshold: 3.
+	self speciationThreshold: 8.
 	self doUseElitism
 ]
 
@@ -302,7 +316,7 @@ NEAT >> runOneGeneration [
 	self doSpeciation.
 	newPopulation := OrderedCollection new.
 	numberOfIndividualToCreate := (shouldUseElitism and: [ self currentGeneration > 1 ]) 
-												ifTrue: [ newPopulation add: self logs last bestIndividual copy. populationSize - 1 ] 
+												ifTrue: [ newPopulation addAll: self logs last bestN copy . populationSize - elitismN] 
 												ifFalse: [ populationSize ].
 	numberOfIndividualToCreate
 		timesRepeat: [ 

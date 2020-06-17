@@ -6,5 +6,5 @@ Class {
 
 { #category : #'target resize' }
 Gaussian class >> apply: z [
-	^ (z * z) negated exp
+^ (z*z) negated exp
 ]

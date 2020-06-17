@@ -2,7 +2,10 @@ Class {
 	#name : #NEIndividualCPPN,
 	#superclass : #NEIndividual,
 	#instVars : [
-		'network'
+		'network',
+		'minWeight',
+		'minScale',
+		'maxScale'
 	],
 	#classInstVars : [
 		'inputs',
@@ -144,12 +147,17 @@ NEIndividualCPPN >> buildANNFromCPP [
 		NEIndividualCPPN outputs do: [ :position| net addOutputNode:position ].
 
 		
-		net inputNodes do: [ :node1| net outputNodes do:[:node2| |array| array := (Array with: (node1 position first) with:(node1 position last) with:(node2 position first) with: (node2 position last)).
-																							net addConnection: (NEConnection new 
-																											makeEnabled; 
-																											in: (node1 id);
-																											out: (node2 id);
-																											weight: ((super evaluate: array) first))]].
+		net inputNodes do: [ :node1| net outputNodes do:[:node2| |array connection| array := (Array with: (node1 position x) with:(node1 position y) with:(node2 position x) with: (node2 position y)).
+				connection := NEConnection new makeEnabled; 
+													in: (node1 id);
+													out: (node2 id);
+													weight: ((super evaluate: array) first).
+				(connection weight abs < minWeight) ifTrue: [ connection makeDisabled].
+				connection weight: (self normalizeWeight: connection weight).
+				net addConnection: connection.]].																	
+				
+				
+																							
 		
 		self network: net
 ]
@@ -190,6 +198,14 @@ NEIndividualCPPN >> evaluatePosition: position1 and: position2 [
 ]
 
 { #category : #adding }
+NEIndividualCPPN >> initialize [
+super initialize.
+minWeight := 0.1.
+minScale := -3.
+maxScale := 3.
+]
+
+{ #category : #adding }
 NEIndividualCPPN >> network [
 	^network
 ]
@@ -197,4 +213,9 @@ NEIndividualCPPN >> network [
 { #category : #adding }
 NEIndividualCPPN >> network: aNetwork [
 	network := aNetwork
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> normalizeWeight: weight [
+^(maxScale - minScale)* ((weight + 1)/(2))+ minScale
 ]

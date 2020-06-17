@@ -7,7 +7,8 @@ Class {
 		'minFitness',
 		'maxFitness',
 		'averageFitness',
-		'bestIndividual'
+		'bestIndividual',
+		'bestN'
 	],
 	#category : #'NEAT-Core'
 }
@@ -30,6 +31,16 @@ NELog >> bestIndividual [
 { #category : #accessing }
 NELog >> bestIndividual: anObject [
 	bestIndividual := anObject
+]
+
+{ #category : #accessing }
+NELog >> bestN [
+^bestN 
+]
+
+{ #category : #accessing }
+NELog >> bestN: array [
+bestN := array
 ]
 
 { #category : #accessing }

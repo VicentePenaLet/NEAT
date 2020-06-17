@@ -9,7 +9,7 @@ Class {
 		'random',
 		'fitness',
 		'species',
-		't',
+		'ticks',
 		'results',
 		'expected'
 	],
@@ -169,6 +169,9 @@ NEIndividual >> copy [
 	newInd nodes: (self nodes collect: #copy).
 	newInd connections: (self connections collect: #copy).
 	newInd fitness: fitness.
+	newInd ticks: ticks.
+	newInd results: results.
+	newInd expected: expected.
 	^ newInd
 ]
 
@@ -277,7 +280,7 @@ NEIndividual >> numberOfConnections [
 { #category : #'as yet unclassified' }
 NEIndividual >> numberOfInputs [
 	"We substracte one for the bias"
-	^ self inputNodes size - 1
+	^ self inputNodes size -1 
 ]
 
 { #category : #'as yet unclassified' }
@@ -367,6 +370,11 @@ NEIndividual >> species: anObject [
 { #category : #'as yet unclassified' }
 NEIndividual >> t: n [
  t:= n
+]
+
+{ #category : #accessing }
+NEIndividual >> ticks: n [
+ticks:= n
 ]
 
 { #category : #tracing }

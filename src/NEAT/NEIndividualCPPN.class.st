@@ -5,7 +5,8 @@ Class {
 		'network',
 		'minWeight',
 		'minScale',
-		'maxScale'
+		'maxScale',
+		'getPosition'
 	],
 	#classInstVars : [
 		'inputs',
@@ -13,6 +14,11 @@ Class {
 	],
 	#category : #'NEAT-Core'
 }
+
+{ #category : #testing }
+NEIndividualCPPN class >> createFromText: path [
+(STONReader on: (path asFileReference readStream)) next.
+]
 
 { #category : #testing }
 NEIndividualCPPN class >> inputs [
@@ -147,7 +153,7 @@ NEIndividualCPPN >> buildANNFromCPP [
 		NEIndividualCPPN outputs do: [ :position| net addOutputNode:position ].
 
 		
-		net inputNodes do: [ :node1| net outputNodes do:[:node2| |array connection| array := (Array with: (node1 position x) with:(node1 position y) with:(node2 position x) with: (node2 position y)).
+		net inputNodes do: [ :node1| net outputNodes do:[:node2| |array connection| array := (Array with: (node1 position first) with:(node1 position last) with:(node2 position first) with: (node2 position last)).
 				connection := NEConnection new makeEnabled; 
 													in: (node1 id);
 													out: (node2 id);
@@ -160,6 +166,17 @@ NEIndividualCPPN >> buildANNFromCPP [
 																							
 		
 		self network: net
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> drawExamples [
+|dataset|
+dataset:= ExampleGenerator run.
+		self buildANNFromCPP.
+		dataset do: [ :example |  example evaluate: self.
+										 result:= getPosition value: self.
+										 example predicted: result.
+										]
 ]
 
 { #category : #adding }
@@ -198,9 +215,64 @@ NEIndividualCPPN >> evaluatePosition: position1 and: position2 [
 ]
 
 { #category : #adding }
+NEIndividualCPPN >> getInputMatrix [
+|grid factor c|
+grid := Example new.
+grid createGrid.
+factor := self network inputNodes size sqrt - 1 /2.
+self  network inputNodes do:[:node |grid placeValue: node result atRow: (node position first * factor + factor +1) column: (node position last * factor + factor + 1) ].
+
+c := RSCanvas new.
+
+grid grid doWithIndex: [ :row :y |
+    row doWithIndex: [ :value :x ||color box colorValue|
+        box := RSBox new size: 10.
+        colorValue := (1-value) exp * 100.
+        color :=  Color r: colorValue g: colorValue b: colorValue.
+        value = 0 
+            ifTrue: [ box color: color] 
+            ifFalse: [  box color: color  ].
+        c add: box.
+    ]
+].
+RSGridLayout new lineItemsCount: grid grid first size; gapSize: 0; on: c shapes.
+c @ RSCanvasController.
+grid canvas: c.
+^grid.
+
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> getOutputMatrix [
+|grid factor c|
+grid := Example new.
+grid createGrid.
+factor := self network outputNodes size sqrt - 1 /2.
+self  network outputNodes do:[:node |grid placeValue: node result atRow: (node position first * factor + factor +1) column: (node position last * factor + factor + 1) ].
+
+c := RSCanvas new.
+
+grid grid doWithIndex: [ :row :y |
+    row doWithIndex: [ :value :x ||color box colorValue aux|
+        box := RSBox new size: 10.
+        (value < 0.95) ifTrue:[aux:=0];
+							 ifFalse:[aux := (value - 0.9)/(1-0.9)].
+        colorValue := 1 - ((100000 * (aux-1)) exp).
+        color :=  Color r: colorValue g: colorValue b: colorValue.
+        c add: box.
+    ]
+].
+RSGridLayout new lineItemsCount: grid grid first size; gapSize: 0; on: c shapes.
+c @ RSCanvasController.
+grid canvas: c.
+^grid.
+
+]
+
+{ #category : #adding }
 NEIndividualCPPN >> initialize [
 super initialize.
-minWeight := 0.1.
+minWeight := 0.2.
 minScale := -3.
 maxScale := 3.
 ]
@@ -218,4 +290,30 @@ NEIndividualCPPN >> network: aNetwork [
 { #category : #adding }
 NEIndividualCPPN >> normalizeWeight: weight [
 ^(maxScale - minScale)* ((weight + 1)/(2))+ minScale
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> toText [ 
+|stream|
+stream := String new writeStream.
+(STONWriter on: stream)
+    prettyPrint: true;
+    newLine: OSPlatform current lineEnding;
+    nextPut: self.
+ 
+^stream contents
+
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> visualizeNetworkWeights [
+		network inputNodes do: [ :node1| network outputNodes do:[:node2| |array connection| array := (Array with: (node1 position x) with:(node1 position y) with:(node2 position x) with: (node2 position y)).
+				connection := (super evaluate: array) first]]
+																	
+				
+
+]
+
+{ #category : #adding }
+NEIndividualCPPN >> weightMatrix [
 ]

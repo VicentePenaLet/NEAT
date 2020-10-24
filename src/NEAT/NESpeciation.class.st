@@ -45,6 +45,7 @@ NESpeciation >> process: someIndividuals [
 	
 	g := someIndividuals groupedBy: [ :individual | 
 		| seq |
+		individual network: 0.
 		seq := individual innovationNumberSequence.
 		seq size < 2 
 			ifTrue: [ seq first ]

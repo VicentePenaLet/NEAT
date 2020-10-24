@@ -39,8 +39,8 @@ NELog >> bestN [
 ]
 
 { #category : #accessing }
-NELog >> bestN: array [
-bestN := array
+NELog >> bestN:n [
+bestN:= n 
 ]
 
 { #category : #accessing }

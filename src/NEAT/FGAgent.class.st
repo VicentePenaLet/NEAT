@@ -16,7 +16,11 @@ Class {
 		'tolerance',
 		'ttot',
 		'fitness',
-		'capturedFood'
+		'capturedFood',
+		'positionHistory',
+		'canvas',
+		'i',
+		'drawings'
 	],
 	#category : #'NEAT-FoodGathering'
 }
@@ -28,6 +32,14 @@ FGAgent >> computeFitness [
 ]
 
 { #category : #'as yet unclassified' }
+FGAgent >> copy [
+|newAgent|
+newAgent := FGAgent new.
+newAgent drawings: drawings.
+	
+]
+
+{ #category : #'as yet unclassified' }
 FGAgent >> cpp [ 
 	^cpp
 ]
@@ -35,6 +47,32 @@ FGAgent >> cpp [
 { #category : #'as yet unclassified' }
 FGAgent >> cpp: net [
 	cpp := net
+]
+
+{ #category : #'as yet unclassified' }
+FGAgent >> draw [ 
+drawings := OrderedCollection new.
+positionHistory asArray with: self getFoodPositions do: [:posHistory :foodPosition ||foodCircle|
+	canvas := RSCanvas new. 
+	posHistory doWithIndex: [ :pos :ind| |circle|
+	 												circle := RSEllipse new size: 5; model: ind.
+    												canvas add: circle.
+    												circle @ RSPopup.
+    												circle translateTo: pos rounded * 5.].
+	
+	"foodCircle := RSEllipse new size: 20; color: Color red.
+	canvas add: foodCircle.
+	foodCircle @ RSPopup.
+	foodCircle translateTo: foodPosition rounded * 5."
+	canvas @ RSCanvasController.
+	drawings add: canvas.  
+	].
+
+]
+
+{ #category : #'as yet unclassified' }
+FGAgent >> drawings: d [
+drawings := d.
 ]
 
 { #category : #'as yet unclassified' }
@@ -135,6 +173,7 @@ FGAgent >> initialize [
 	score := 0.
 	ttot := 0.
 	capturedFood := OrderedCollection new.
+	positionHistory := OrderedCollection new.
 	self generateInputCoordenates.
 	self generateOutputCoordenates.
 	
@@ -201,6 +240,18 @@ FGAgent >> outputs [
 ]
 
 { #category : #'as yet unclassified' }
+FGAgent >> positionHistory [
+^positionHistory
+	
+]
+
+{ #category : #'as yet unclassified' }
+FGAgent >> positionHistory: history [
+positionHistory := history
+	
+]
+
+{ #category : #'as yet unclassified' }
 FGAgent >> resetPosition [
  position:= (0@0).
  sensors do:[:sensor| sensor resetPosition].
@@ -214,6 +265,7 @@ FGAgent >> run [
  self getFoodPositions do:[:foodPosition | self resetPosition.
 														self runTrial: foodPosition].
  self computeFitness.
+
 													
 													
  
@@ -222,6 +274,9 @@ FGAgent >> run [
 
 { #category : #'as yet unclassified' }
 FGAgent >> runTrial: foodPosition [
+|positions|
+positions := OrderedCollection new.
+positions add: position.
 1 to: maxTicks do: [ :i|  |outs|
 						self measure: foodPosition.
 						outs:= sensors collect: [:sensor| sensor output.].
@@ -229,9 +284,10 @@ FGAgent >> runTrial: foodPosition [
 						cpp evaluate: outs.
 						self getSpeed.
 						self move.
-						((position distanceTo: foodPosition) abs < tolerance) ifTrue: [ score := score + 1.ttot := ttot + i. capturedFood add: foodPosition .^true].
+						positions add: position.
+						((position distanceTo: foodPosition) abs < tolerance) ifTrue: [ score := score + 1.ttot := ttot + i. capturedFood add: foodPosition .positionHistory add: positions.^true]. 
 						].
-
+positionHistory add: positions.
 ttot := ttot + maxTicks. 
 ]
 

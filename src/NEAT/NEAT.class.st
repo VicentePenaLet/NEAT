@@ -16,7 +16,11 @@ Class {
 		'shouldUseElitism',
 		'speciationThreshold',
 		'individualClass',
-		'elitismN'
+		'elitismN',
+		'hNlog',
+		'hNlogs',
+		'logFileName',
+		'populationId'
 	],
 	#category : #'NEAT-Core'
 }
@@ -24,12 +28,15 @@ Class {
 { #category : #initialization }
 NEAT >> buildInitialPopulation [
 	population := OrderedCollection new.
+	populationId := 1.
 	populationSize timesRepeat: [ 
 		| i |
 		i := individualClass new.
 		i random: random.
 		numberOfInputs timesRepeat: [ i addInputNode ].
 		numberOfOutputs timesRepeat: [ i addOutputNode ].
+		i id: populationId.
+		populationId := populationId +1.
 		population add: i
 		]
 ]
@@ -72,7 +79,26 @@ NEAT >> defaultConfig [
 	self for: NEAddConnectionMutationOperation prob: 0.2.
 	self for: NEAddNodeMutationOperation prob: 0.2.
 	self for: NECrossoverOperation prob: 0.2.
+	logFileName:= 'logs/HyperNeat - logs.txt'.
 
+]
+
+{ #category : #initialization }
+NEAT >> doHNLog [
+	self assert: [ speciation notNil ].
+	hNlog := HNLog new.
+	hNlog fileName: logFileName.
+	hNlog generation: logs size.
+	hNlog worstFitness: (population collect: #fitness) min.
+	hNlog bestFitness: (population collect: #fitness) max.
+	hNlog averageFitness: ((population collect: #fitness) average asFloat round: 3).
+	hNlog bestIndividual: (( self result)).
+	hNlog bestN:((self getBestN: elitismN)).
+	hNlog time: (DateAndTime now asString).
+	hNlog population: (self population).
+	population do: [ :ind| ind network: 0].
+	hNlog writeToFile.
+	hNlog populationToFiles.
 ]
 
 { #category : #initialization }
@@ -80,12 +106,12 @@ NEAT >> doLog [
 	self assert: [ speciation notNil ].
 	log := NELog new.
 	log generation: logs size.
-	log speciation: speciation.
+	"log speciation: speciation."
 	log minFitness: (population collect: #fitness) min.
 	log maxFitness: (population collect: #fitness) max.
 	log averageFitness: ((population collect: #fitness) average asFloat round: 3).
-	log bestIndividual: self result.
-	log bestN: (self getBestN: elitismN).
+	log bestIndividual: (( self result)).
+	log bestN:((self getBestN: elitismN)).
 	logs add: log.
 ]
 
@@ -207,8 +233,13 @@ NEAT >> initialize [
 	
 	populationSize := 150.
 	random := Random seed: 42.
-	elitismN := 20.
+	elitismN := 10.
 	logs := OrderedCollection new.
+	hNlogs := OrderedCollection new.
+	hNlog := HNLog new.
+	hNlog fileName: logFileName.
+	hNlog cleanFile.
+	(FileSystem disk workingDirectory / 'logs' ) ensureCreateDirectory. 
 	numberOfGenerations := 10.
 	
 	self individualClass: NEIndividual.
@@ -341,11 +372,14 @@ NEAT >> runOneGeneration [
 					i addChildren: newInd ].
 
 			self doMutate: newInd.
+			newInd id: populationId.
+			populationId:=populationId +1.
 			newPopulation add: newInd.
 			newInd computeFitness: fitness ].
 
 	population := newPopulation.
-	self doLog
+	self doLog.
+	self doHNLog
 ]
 
 { #category : #'as yet unclassified' }

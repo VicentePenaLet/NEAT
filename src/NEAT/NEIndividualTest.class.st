@@ -4,6 +4,11 @@ Class {
 	#category : #'NEAT-Tests'
 }
 
+{ #category : #accessing }
+NEIndividualTest >> bestN: array [
+bestN := array
+]
+
 { #category : #'tests mutation operators' }
 NEIndividualTest >> setUp [
 	super setUp.

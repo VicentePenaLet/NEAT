@@ -11,13 +11,15 @@ Class {
 		'species',
 		'ticks',
 		'results',
-		'expected'
+		'expected',
+		'id'
 	],
 	#category : #'NEAT-Core'
 }
 
 { #category : #adding }
 NEIndividual >> addChildren: anIndividual [
+   anIndividual network: 0.
 	children add: anIndividual
 ]
 
@@ -120,6 +122,7 @@ NEIndividual >> addOutputNode: aPosition [
 
 { #category : #initialization }
 NEIndividual >> addParent: aParent [
+	aParent network: 0.
 	parents add: aParent
 ]
 
@@ -227,6 +230,16 @@ NEIndividual >> hasChildren [
 	^ children notEmpty
 ]
 
+{ #category : #accessing }
+NEIndividual >> id [
+^id
+]
+
+{ #category : #accessing }
+NEIndividual >> id: i [
+id:=i.
+]
+
 { #category : #initialization }
 NEIndividual >> initialize [
 	super initialize.
@@ -324,6 +337,9 @@ NEIndividual >> printOn: str [
 	str nextPut: $<.
 	fitness ifNotNil: [ str nextPutAll: fitness asString ].
 	str nextPut: $>.
+	str nextPut: $<.
+	fitness ifNotNil: [ str nextPutAll: id asString ].
+	str nextPut: $>.
 ]
 
 { #category : #accessing }
@@ -373,6 +389,11 @@ NEIndividual >> t: n [
 ]
 
 { #category : #accessing }
+NEIndividual >> ticks [ 
+^ticks
+]
+
+{ #category : #accessing }
 NEIndividual >> ticks: n [
 ticks:= n
 ]
@@ -396,4 +417,26 @@ NEIndividual >> visualize [
 	b edges connectToAll: #connectedNodes.
 	b layout tree.
 	^ b
+]
+
+{ #category : #'as yet unclassified' }
+NEIndividual >> visualizeOutputs [
+|position grid c predictedIndex |
+c := RSCanvas new.
+
+RSGridLayout new lineItemsCount: grid first size; gapSize: 0; on: c shapes.
+c @ RSCanvasController.
+
+self outputNodes do:[:node||pos| pos = node position rounded.
+			grid doWithIndex: [ :row :y |
+    row doWithIndex: [ :value :x ||box|
+        box := RSBox new size: 10.
+        value = 0 
+            ifTrue: [ box color: Color black ] 
+            ifFalse: [  box color: Color white  ].
+		(x @ y)  =	 position ifTrue: [ box color: Color red ].
+		(x @ y)  = (predictedIndex first @ predictedIndex last) ifTrue: [ box color: Color green ].
+        c add: box.
+    ]
+].]
 ]

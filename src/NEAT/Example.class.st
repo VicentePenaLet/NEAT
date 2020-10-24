@@ -22,6 +22,12 @@ Example >> canvas [
 ]
 
 { #category : #copying }
+Example >> canvas: can [
+c:=can.
+
+]
+
+{ #category : #copying }
 Example >> copy [ 
 |newExample|
 newExample := Example new.
